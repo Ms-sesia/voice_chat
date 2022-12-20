@@ -1,3 +1,4 @@
+console.info("app.js");
 const socket = io();
 
 // phone call
@@ -5,6 +6,7 @@ const myFace = document.getElementById("myFace");
 const muteBtn = document.getElementById("mute");
 const cameraBtn = document.getElementById("camera");
 const camerasSelect = document.getElementById("cameras");
+const audiosSelect = document.getElementById("audios");
 const call = document.getElementById("call");
 
 call.hidden = true;
@@ -19,7 +21,10 @@ async function getCameras() {
   try {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const cameras = devices.filter((device) => device.kind === "videoinput");
+    const audios = devices.filter((device) => device.kind === "audiooutput");
     const currentCamera = myStream.getVideoTracks()[0];
+    const currentAudio = myStream.getAudioTracks()[0];
+
     cameras.forEach((camera) => {
       const option = document.createElement("option");
       option.value = camera.deviceId;
@@ -28,6 +33,15 @@ async function getCameras() {
         option.selected = true;
       }
       camerasSelect.appendChild(option);
+    });
+    audios.forEach((audio) => {
+      const option = document.createElement("option");
+      option.value = audio.deviceId;
+      option.innerText = audio.label;
+      if (currentAudio.label === audio.label) {
+        option.selected = true;
+      }
+      audiosSelect.appendChild(option);
     });
   } catch (e) {
     console.log(e);
@@ -50,6 +64,7 @@ async function getMedia(deviceId) {
       deviceId ? cameraConstrains : initialConstrains
     );
     myFace.srcObject = myStream;
+
     if (!deviceId) {
       await getCameras();
     }
@@ -72,7 +87,6 @@ function handleMuteClick() {
 }
 
 function handleCameraClick() {
-  console.log(myStream.getVideoTracks());
   myStream
     .getVideoTracks()
     .forEach((track) => (track.enabled = !track.enabled));
@@ -85,6 +99,19 @@ function handleCameraClick() {
   }
 }
 
+function handleAudioClick() {
+  myStream
+    .getAudioTracks()
+    .forEach((track) => (track.enabled = !track.enabled));
+  if (muted) {
+    muteBtn.innerText = "Turn Camera Off";
+    muted = false;
+  } else {
+    muteBtn.innerText = "Turn Camera On";
+    muted = true;
+  }
+}
+
 async function handleCameraChange() {
   await getMedia(camerasSelect.value);
   if (myPeerConnection) {
@@ -93,6 +120,17 @@ async function handleCameraChange() {
       .getSenders()
       .find((sender) => sender.track.kind === "video");
     videoSender.replaceTrack(videoTrack);
+  }
+}
+
+async function handleAudioChange() {
+  await getMedia(audiosSelect.value);
+  if (myPeerConnection) {
+    const audioTrack = myStream.getAudioTracks()[0];
+    const audioSender = myPeerConnection
+      .getSenders()
+      .find((sender) => sender.track.kind === "audio");
+    audioSender.replaceTrack(audioTrack);
   }
 }
 
@@ -108,6 +146,8 @@ const welcomeForm = welcome.querySelector("form");
 async function initCall() {
   welcome.hidden = true;
   call.hidden = false;
+
+  console.info("initCall : ");
   await getMedia(); //카메라, 마이크 불러옴
   makeConnection();
 }
@@ -115,8 +155,9 @@ async function initCall() {
 async function handleWelcomeSubmit(event) {
   event.preventDefault();
   const input = welcomeForm.querySelector("input");
+
   await initCall();
-  socket.emit("join_room", input.value, initCall);
+  socket.emit("join_room", input.value);
   roomName = input.value;
   input.value = "";
 }
@@ -133,16 +174,16 @@ socket.on("welcome", async () => {
 });
 
 socket.on("offer", async (offer) => {
-  console.log("received the offer");
+  // console.log("received the offer");
   myPeerConnection.setRemoteDescription(offer);
   const answer = await myPeerConnection.createAnswer();
   myPeerConnection.setLocalDescription(answer);
   socket.emit("answer", answer, roomName);
-  console.log("sent the answer");
+  // console.log("sent the answer");
 });
 
 socket.on("answer", (answer) => {
-  console.log("received the answer");
+  // console.log("received the answer");
   myPeerConnection.setRemoteDescription(answer);
 });
 
@@ -154,20 +195,44 @@ socket.on("ice", (ice) => {
 // RTC code
 
 function makeConnection() {
-  myPeerConnection = new RTCPeerConnection();
-  myPeerConnection.addEventListener("icecandidate", handleIce);
+  myPeerConnection = new RTCPeerConnection({
+    iceServers: [
+      {
+        urls: [
+          "stun:stun.l.google.com:19302",
+          "stun:stun1.l.google.com:19302",
+          "stun:stun2.l.google.com:19302",
+          "stun:stun3.l.google.com:19302",
+          "stun:stun4.l.google.com:19302",
+        ],
+      },
+    ],
+  });
   myPeerConnection.addEventListener("addstream", handleAddStream);
+  myPeerConnection.addEventListener("icecandidate", handleIce);
+
+  myPeerConnection.addEventListener("track", handleTrack);
+
   myStream
     .getTracks()
     .forEach((track) => myPeerConnection.addTrack(track, myStream));
 }
 
+function handleTrack(data) {
+  console.log("handle track");
+  const peerFace = document.querySelector("#peerFace");
+  peerFace.srcObject = data.streams[0];
+}
+
 function handleIce(data) {
-  console.log("sent candidate");
+  console.log("handleIce");
   socket.emit("ice", data.candidate, roomName);
 }
 
 function handleAddStream(data) {
+  console.info("모바일 디깅용 : ", navigator.userAgent);
   const peerFace = document.getElementById("peerFace");
+
+  peerFace.type = "screen";
   peerFace.srcObject = data.stream;
 }

@@ -1,5 +1,5 @@
 doctype html
-html(lang="en")
+html(lang="ko")
     head
         meta(charset="UTF-8")
         meta(http-equiv="X-UA-Compatible", content="IE=edge")
@@ -9,6 +9,7 @@ html(lang="en")
     body 
         header 
             h1 Zoom
+            
         main 
             div#welcome
                 form
@@ -16,10 +17,11 @@ html(lang="en")
                     button Enter room
             div#call
                 div#myStream
-                    video#myFace(autoplay,playsinline, width="400", height="400")
+                    video#myFace(autoplay,playsinline, width="300", height="300")
                     button#mute  Mute
                     button#camera   Turn Camera Off
                     select#cameras
-                video#peerFace(autoplay,playsinline, width="400", height="400")
+                    select#audios
+                    video#peerFace(autoplay,playsinline, width="300", height="300")
         script(src="/socket.io/socket.io.js")  
         script(src="/public/js/app.js")
