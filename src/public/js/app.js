@@ -1,10 +1,11 @@
 const socket = io();
 
+const myFace = document.getElementById("myFace");
+const peerFace = document.getElementById("peerFace");
 const sendCall = document.getElementById("sendCall");
 const callBtn = document.getElementById("sendBtn");
 const endBtn = document.getElementById("callEnd");
 const receiveBtn = document.getElementById("receiveBtn");
-const peerFace = document.getElementById("peerFace");
 const h3 = document.querySelector("h3");
 const h1 = document.querySelector("h1");
 
@@ -35,6 +36,7 @@ endBtn.addEventListener("click", handleCallEnd);
 receiveBtn.addEventListener("click", handleCallReceive);
 
 async function initCall() {
+  await getMedia(); //카메라, 마이크 불러옴
   makeConnection();
   console.log("연결됨");
 }
@@ -47,17 +49,10 @@ async function handleCallSend() {
   h3.innerText = "전화 수신 중";
   h1.innerText = "";
 
-  await getMedia(); //카메라, 마이크 불러옴
+  // myStream.getTracks().forEach((track) => {
+  //   myPeerConnection.addTrack(track, myStream);
+  // });
 
-  myStream
-    .getTracks()
-    .forEach((track) => myPeerConnection.addTrack(track, myStream));
-
-  myPeerConnection.addEventListener("addstream", handleAddStream);
-  myPeerConnection.addEventListener("track", handleTrack);
-
-  console.log("전화수신:", myStream);
-  // socket.emit("send_ing");
   socket.emit("sendCall", roomName);
 }
 
@@ -74,17 +69,10 @@ async function handleCallReceive() {
   receiveBtn.style.display = "none";
   endBtn.style.display = "flex";
 
-  await getMedia(); //카메라, 마이크 불러옴
-
-  myStream
-    .getTracks()
-    .forEach((track) => myPeerConnection.addTrack(track, myStream));
-
-  console.log("전화 받기", myStream);
-
-  myPeerConnection.addEventListener("addstream", handleAddStream);
-  myPeerConnection.addEventListener("track", handleTrack);
-  // socket.emit('receiveCall' )
+  // 마이크 찾아서 상대한테 넘김
+  // myStream.getTracks().forEach((track) => {
+  //   myPeerConnection.addTrack(track, myStream);
+  // });
 }
 
 // socket code
@@ -147,10 +135,16 @@ function makeConnection() {
       },
     ],
   });
-
   myPeerConnection.addEventListener("icecandidate", handleIce);
 
   socket.emit("join_room", roomName);
+
+  myPeerConnection.addEventListener("addstream", handleAddStream);
+  myPeerConnection.addEventListener("track", handleTrack);
+
+  myStream.getTracks().forEach((track) => {
+    myPeerConnection.addTrack(track, myStream);
+  });
 }
 
 function handleIce(data) {
