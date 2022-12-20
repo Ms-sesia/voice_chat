@@ -4,24 +4,26 @@ html(lang="ko")
         meta(charset="UTF-8")
         meta(http-equiv="X-UA-Compatible", content="IE=edge")
         meta(name="viewport", content="width=device-width, initial-scale=1.0")
-        title Zoom
-        link(rel="stylesheet", href="https://unpkg.com/mvp.css")
+        link(rel='icon',type="image/x-icon",  sizes='16x16', href='/public/assets/logo.png')
+        title QR
+        //- link(rel="stylesheet", href="https://unpkg.com/mvp.css")
+        link(rel="stylesheet", href="/public/stylesheet/home.css")
     body 
-        header 
-            h1 Zoom
+
             
         main 
-            div#welcome
-                form
-                    input(placeholder="room name", required, type="text")
-                    button Enter room
-            div#call
-                div#myStream
-                    video#myFace(autoplay,playsinline, width="300", height="300")
-                    button#mute  Mute
-                    button#camera   Turn Camera Off
-                    select#cameras
-                    select#audios
-                    video#peerFace(autoplay,playsinline, width="300", height="300")
+            div#sendCall
+                h3 전화걸기
+                h1 BMW X5 차주
+                img#phoneImage(src="/public/assets/phoneImage.svg", alt="phoneImage")
+                button#sendBtn
+                    img(src="/public/assets/callIcon.png", alt="전화걸기")
+
+                button#receiveBtn 전화 받기
+                
+                button#callEnd 
+                    img(src="/public/assets/callIcon.png", alt="전화끊기")
+                video#myFace(autoplay,playsinline, width="300", height="300")
+                video#peerFace(autoplay,playsinline, width="300", height="300")
         script(src="/socket.io/socket.io.js")  
         script(src="/public/js/app.js")

@@ -21,6 +21,7 @@ wsServer.on("connection", (socket) => {
     socket.join(roomName);
     socket.to(roomName).emit("welcome");
   });
+
   socket.on("offer", (offer, roomName) => {
     socket.to(roomName).emit("offer", offer);
   });
@@ -29,6 +30,17 @@ wsServer.on("connection", (socket) => {
   });
   socket.on("ice", (ice, roomName) => {
     socket.to(roomName).emit("ice", ice);
+  });
+
+  socket.on("sendCall", (roomName) => {
+    socket.to(roomName).emit("receiveCall");
+  });
+
+  socket.on("receiveCall", () => {});
+
+  socket.on("end", (roomName) => {
+    socket.to(roomName).emit("close");
+    socket.in(roomName).disconnectSockets(true);
   });
 });
 
