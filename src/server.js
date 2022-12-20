@@ -36,7 +36,9 @@ wsServer.on("connection", (socket) => {
     socket.to(roomName).emit("receiveCall");
   });
 
-  socket.on("receiveCall", () => {});
+  socket.on("received", (roomName) => {
+    socket.to(roomName).emit("received");
+  });
 
   socket.on("end", (roomName) => {
     socket.to(roomName).emit("close");

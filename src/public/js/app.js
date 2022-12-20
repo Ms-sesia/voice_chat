@@ -49,10 +49,6 @@ async function handleCallSend() {
   h3.innerText = "전화 수신 중";
   h1.innerText = "";
 
-  // myStream.getTracks().forEach((track) => {
-  //   myPeerConnection.addTrack(track, myStream);
-  // });
-
   socket.emit("sendCall", roomName);
 }
 
@@ -69,10 +65,8 @@ async function handleCallReceive() {
   receiveBtn.style.display = "none";
   endBtn.style.display = "flex";
 
-  // 마이크 찾아서 상대한테 넘김
-  // myStream.getTracks().forEach((track) => {
-  //   myPeerConnection.addTrack(track, myStream);
-  // });
+  socket.emit("received", roomName);
+  peerFace.play();
 }
 
 // socket code
@@ -110,6 +104,11 @@ socket.on("receiveCall", () => {
 
   receiveBtn.style.display = "flex";
   callBtn.style.display = "none";
+});
+
+// 내가 건 전화에 상대방이 받았을 때
+socket.on("received", () => {
+  peerFace.play();
 });
 
 // 전화 끊기
@@ -154,8 +153,10 @@ function handleIce(data) {
 function handleTrack(data) {
   const peerFace = document.querySelector("#peerFace");
   peerFace.srcObject = data.streams[0];
+  peerFace.pause();
 }
 
 function handleAddStream(data) {
   peerFace.srcObject = data.stream;
+  peerFace.pause();
 }
