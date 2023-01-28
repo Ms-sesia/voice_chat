@@ -19,32 +19,56 @@ let cameraOff = false;
 let roomName = "abc";
 let myPeerConnection;
 
-initCall();
-
-async function getMedia(deviceId) {
-  try {
-    myStream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: false,
-    });
-  } catch (e) {
-    console.log(e);
-  }
-}
-
 callBtn.addEventListener("click", handleCallSend);
 endBtn.addEventListener("click", handleCallEnd);
 receiveBtn.addEventListener("click", handleCallReceive);
 
-async function initCall() {
+initCall();
+
+const initCall = async () => {
   await getMedia(); //카메라, 마이크 불러옴
   makeConnection();
   console.log("socket정보:", socket);
   console.log("연결됨");
-}
+};
+
+const getMedia = async (deviceId) => {
+  try {
+    myStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+const makeConnection = () => {
+  myPeerConnection = new RTCPeerConnection({
+    iceServers: [
+      {
+        urls: [
+          "stun:stun.l.google.com:19302",
+          "stun:stun1.l.google.com:19302",
+          "stun:stun2.l.google.com:19302",
+          "stun:stun3.l.google.com:19302",
+          "stun:stun4.l.google.com:19302",
+        ],
+      },
+    ],
+  });
+
+  myPeerConnection.addEventListener("icecandidate", handleIce);
+
+  socket.emit("join_room", roomName);
+
+  myPeerConnection.addEventListener("addstream", handleAddStream);
+  myPeerConnection.addEventListener("track", handleTrack);
+
+  myStream.getTracks().forEach((track) => {
+    myPeerConnection.addTrack(track, myStream);
+  });
+};
 
 // 전화 수신
-async function handleCallSend() {
+const handleCallSend = async () => {
   callBtn.style.display = "none";
   endBtn.style.display = "flex";
 
@@ -52,24 +76,39 @@ async function handleCallSend() {
   h1.innerText = "";
 
   socket.emit("sendCall", roomName);
-}
+};
 
 // 수신 종료
-async function handleCallEnd() {
+const handleCallEnd = async () => {
   endBtn.style.display = "none";
   callBtn.style.display = "flex";
 
   socket.emit("end", roomName);
-}
+};
 
 // 전화 받기
-async function handleCallReceive() {
+const handleCallReceive = async () => {
   receiveBtn.style.display = "none";
   endBtn.style.display = "flex";
 
   socket.emit("received", roomName);
   peerFace.play();
-}
+};
+
+const handleIce = (data) => {
+  socket.emit("ice", data.candidate, roomName);
+};
+
+const handleTrack = (data) => {
+  const peerFace = document.querySelector("#peerFace");
+  peerFace.srcObject = data.streams[0];
+  peerFace.pause();
+};
+
+const handleAddStream = (data) => {
+  peerFace.srcObject = data.stream;
+  peerFace.pause();
+};
 
 // socket code
 
@@ -119,46 +158,3 @@ socket.on("close", () => {
   endBtn.style.display = "none";
   callBtn.style.display = "flex";
 });
-
-// RTC code
-
-function makeConnection() {
-  myPeerConnection = new RTCPeerConnection({
-    iceServers: [
-      {
-        urls: [
-          "stun:stun.l.google.com:19302",
-          "stun:stun1.l.google.com:19302",
-          "stun:stun2.l.google.com:19302",
-          "stun:stun3.l.google.com:19302",
-          "stun:stun4.l.google.com:19302",
-        ],
-      },
-    ],
-  });
-  myPeerConnection.addEventListener("icecandidate", handleIce);
-
-  socket.emit("join_room", roomName);
-
-  myPeerConnection.addEventListener("addstream", handleAddStream);
-  myPeerConnection.addEventListener("track", handleTrack);
-
-  myStream.getTracks().forEach((track) => {
-    myPeerConnection.addTrack(track, myStream);
-  });
-}
-
-function handleIce(data) {
-  socket.emit("ice", data.candidate, roomName);
-}
-
-function handleTrack(data) {
-  const peerFace = document.querySelector("#peerFace");
-  peerFace.srcObject = data.streams[0];
-  peerFace.pause();
-}
-
-function handleAddStream(data) {
-  peerFace.srcObject = data.stream;
-  peerFace.pause();
-}
