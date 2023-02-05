@@ -2,28 +2,29 @@ doctype html
 html(lang="ko")
     head
         meta(charset="UTF-8")
-        meta(http-equiv="X-UA-Compatible", content="IE=edge")
-        meta(name="viewport", content="width=device-width, initial-scale=1.0")
-        link(rel='icon',type="image/x-icon",  sizes='16x16', href='/public/assets/logo.png')
+        meta(http-equiv="X-UA-Compatible" content="IE=edge")
+        meta(name="viewport" content="width=device-width, initial-scale=1.0")
+        link(rel='icon' type="image/x-icon" sizes='16x16' href='/public/assets/logo.png')
         title QR
-        //- link(rel="stylesheet", href="https://unpkg.com/mvp.css")
-        link(rel="stylesheet", href="/public/stylesheet/home.css")
+        //- link(rel="stylesheet" href="https://unpkg.com/mvp.css")
+        link(rel="stylesheet" href="/public/stylesheet/home.css")
     body 
 
-            
+
         main 
             div#sendCall
                 h3 전화걸기
                 h1 BMW X5 차주
-                img#phoneImage(src="/public/assets/phoneImage.svg", alt="phoneImage")
+                img#phoneImage(src="/public/assets/phoneImage.svg" alt="phoneImage")
                 button#sendBtn
-                    img(src="/public/assets/callIcon.png", alt="전화걸기")
+                    img(src="/public/assets/callIcon.png" alt="전화걸기")
 
                 button#receiveBtn 전화 받기
-                
+
                 button#callEnd 
-                    img(src="/public/assets/callIcon.png", alt="전화끊기")
-                video#myFace(autoplay,playsinline, width="300", height="300")
-                video#peerFace(autoplay,playsinline, width="300", height="300")
+                    img(src="/public/assets/callIcon.png" alt="전화끊기")
+                video#myFace(autoplay,playsinline, width="300" height="300")
+                video#peerFace(autoplay,playsinline, width="300" height="300")
         script(src="/socket.io/socket.io.js")  
         script(src="/public/js/app.js")
+        script(src="/eruda/eruda.js")

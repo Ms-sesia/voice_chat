@@ -1,6 +1,6 @@
 // const socket = io();
 let socket = io.connect("https://testvoicesev.platcube.com/", { path: "/socket.io" });
-
+eruda.init();
 const myFace = document.getElementById("myFace");
 const peerFace = document.getElementById("peerFace");
 const sendCall = document.getElementById("sendCall");
@@ -17,6 +17,7 @@ let myStream;
 let muted = false;
 let cameraOff = false;
 let roomName = "abc";
+// let roomName = "";
 let myPeerConnection;
 
 initCall();
@@ -74,7 +75,9 @@ async function handleCallReceive() {
 // socket code
 
 // 연결
+console.log(3);
 socket.on("welcome", async () => {
+  console.log(4);
   const offer = await myPeerConnection.createOffer();
   myPeerConnection.setLocalDescription(offer);
   console.log("send offer");
@@ -86,16 +89,19 @@ socket.on("offer", async (offer) => {
   myPeerConnection.setRemoteDescription(offer);
   const answer = await myPeerConnection.createAnswer();
   myPeerConnection.setLocalDescription(answer);
+  console.log("send answer");
   socket.emit("answer", answer, roomName);
 });
 
 // 연결
 socket.on("answer", (answer) => {
   myPeerConnection.setRemoteDescription(answer);
+  console.log("get answer");
 });
 
 // 연결
 socket.on("ice", (ice) => {
+  console.log("receive ice:", ice);
   myPeerConnection.addIceCandidate(ice);
 });
 
@@ -136,9 +142,11 @@ function makeConnection() {
       },
     ],
   });
+  console.log(1);
   myPeerConnection.addEventListener("icecandidate", handleIce);
 
   socket.emit("join_room", roomName);
+  console.log(2);
 
   myPeerConnection.addEventListener("addstream", handleAddStream);
   myPeerConnection.addEventListener("track", handleTrack);
@@ -149,6 +157,7 @@ function makeConnection() {
 }
 
 function handleIce(data) {
+  console.log("ice info:", data);
   socket.emit("ice", data.candidate, roomName);
 }
 
